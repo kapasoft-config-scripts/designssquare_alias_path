@@ -1,0 +1,151 @@
+<?php
+
+//to include artifacts from theme scope
+//i.e._theme_include('bazar','/includes/template_api.inc');
+function theme_include($theme, $path) {
+    static $themes = array();
+    if (!isset($themes[$theme])) {
+        $themes[$theme] = drupal_get_path('theme', $theme);
+    }
+    if ($themes[$theme] && ($file = DRUPAL_ROOT . '/' . $themes[$theme] . '/' . $path) && file_exists($file)) {
+        include_once $file;
+    }
+}
+
+
+function get_field_name_from_vocabulary($vocabulary_name, $entity_type = NULL){
+    foreach (field_info_fields() as $field_name => $field) {
+        if ($field['type'] == "taxonomy_term_reference" && $field['settings']['allowed_values'][0]['vocabulary'] == $vocabulary_name) {
+            // Add this field to the return array if no entity type was specified or
+            // if the specified type exists in the field's bundles array.
+//            if (empty($entity_type) || in_array($entity_type, array_keys($field['bundles']))) {
+//                $fields[$field_name] = $field;
+//            }
+            return $field_name;
+        }
+    }
+
+}
+
+function get_referencing_product_display_id($product) {
+    global $language;
+
+    if(isset($product->display_id)){
+        return $product->display_id;
+    }else{
+        // Iterate through fields which refer to products.
+        foreach (commerce_info_fields('commerce_product_reference') as $field) {
+            // Build query.
+            $query = new EntityFieldQuery;
+            $query->entityCondition('entity_type', 'node', '=')
+                ->fieldCondition($field['field_name'], 'product_id', $product->product_id, '=')
+//            ->propertyCondition('language', $language->language, '=')
+                ->range(0, 1);
+
+            if ($result = $query->execute()) {
+                // Return node id.
+                $node = $result['node'];
+                $node_keys = array_keys($node);
+                return array_shift($node_keys);
+            }
+        }
+    }
+
+    return false;
+}
+
+//includes blocks in current scope(i.e html, node,etc) and places them in $region['block_id'] variable
+function include_blocks(&$vars){
+    $all_blocks = array();
+    //making blocks available
+    //retrieve context plugin as alternative for managing blocks
+    $ctx_plugin = (module_exists('context')) ? context_get_plugin('reaction', 'block') : '' ;
+    foreach (system_region_list($GLOBALS['theme']) as $region_key => $region_name) {
+        if(block_get_blocks_by_region($region_key)) {
+            $blocks = block_get_blocks_by_region($region_key);
+        }
+        if(!empty($ctx_plugin)){
+            $ctx_blocks = $ctx_plugin->block_get_blocks_by_region($region_key);
+        }
+
+        if(isset($ctx_blocks) && isset($blocks)) {
+            //there are blocks from the context as well from blocks module
+            $all_blocks = array_merge($blocks, $ctx_blocks);
+
+            //sort the blocks merged
+            $all_blocks['#sorted'] = FALSE;
+
+            //maintain weights
+            foreach ($all_blocks as &$block) {
+                if (isset($block['#block']->weight)) {
+                    $block['#weight'] = $block['#block']->weight;
+                }
+            }
+
+        }elseif(isset($ctx_blocks)){
+            $all_blocks = $ctx_blocks;
+        }elseif(isset($blocks)){
+            $all_blocks = $blocks;
+        }
+
+        // Get the content for each region and add it to the $region variable
+        $vars['region'][$region_key] = (isset($all_blocks) && !empty($all_blocks)) ? $all_blocks : array();
+    }
+}
+
+
+function include_blocks_from_region($region_key, &$vars){
+    $all_blocks = array();
+    //making blocks available
+    //retrieve context plugin as alternative for managing blocks
+    $ctx_plugin = (module_exists('context')) ? context_get_plugin('reaction', 'block') : '' ;
+//    foreach (system_region_list($GLOBALS['theme']) as $region_key => $region_name) {
+        if(block_get_blocks_by_region($region_key)) {
+            $blocks = block_get_blocks_by_region($region_key);
+        }
+        if(!empty($ctx_plugin)){
+            $ctx_blocks = $ctx_plugin->block_get_blocks_by_region($region_key);
+        }
+
+        if(isset($ctx_blocks) && isset($blocks)) {
+            //there are blocks from the context as well from blocks module
+            $all_blocks = array_merge($blocks, $ctx_blocks);
+
+            //sort the blocks merged
+            $all_blocks['#sorted'] = FALSE;
+
+            //maintain weights
+            foreach ($all_blocks as &$block) {
+                if (isset($block['#block']->weight)) {
+                    $block['#weight'] = $block['#block']->weight;
+                }
+            }
+
+        }elseif(isset($ctx_blocks)){
+            $all_blocks = $ctx_blocks;
+        }elseif(isset($blocks)){
+            $all_blocks = $blocks;
+        }
+
+        // Get the content for each region and add it to the $region variable
+        $vars['region'][$region_key] = (isset($all_blocks) && !empty($all_blocks)) ? $all_blocks : array();
+//    }
+}
+
+//determines if current taxonomy term is part of commerce_product
+function is_product_taxonomy(){
+    if(arg(0) == 'taxonomy'){
+        //taxonomy
+        $tid = arg(2);
+        $term = taxonomy_term_load($tid);
+        //retrieve all fields and filter for the particular taxonomy loaded
+        foreach (field_info_field_map() as $field_name => $field) {
+            if($field['type'] == "taxonomy_term_reference" && $field_name == 'field_'.$term->vocabulary_machine_name && array_key_exists('commerce_product', $field['bundles'])){
+                return true;
+            }
+        }
+    }else{
+        //not a taxonomy term
+        return false;
+    }
+}
