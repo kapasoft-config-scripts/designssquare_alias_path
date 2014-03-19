@@ -102,7 +102,7 @@ function _product_basic_tapi($product){
     $field = field_get_items('commerce_product', $product, 'field_product_description');
     $field_ins = field_view_value('commerce_product', $product, 'field_product_description', $field[0]);
     $product_tapi['details']['description'] = (isset($field_ins)) ?  html_entity_decode(render($field_ins)) : '';
-    $product_tapi['details']['description-summary'] = (isset($field[0]['summary'])) ?  html_entity_decode(render($field[0]['summary'])) : '';
+    $product_tapi['details']['description-summary'] = (isset($field[0]['summary'])) ?  html_entity_decode(render($field[0]['summary'])) : truncate_utf8($product_tapi['details']['description'], 300, true, true) ;
 //    $product_tapi['details']['url'] = base_path().drupal_get_path_alias('node/'.$display_node_id);//this has to be set outside the scope the id of node
     $product_tapi['details']['link_text'] = t('Details');
 //    $product_tapi['details']['sharer_description'] = urlencode(html_entity_decode( $product_tapi['details']['description'] , ENT_COMPAT, 'UTF-8'));
