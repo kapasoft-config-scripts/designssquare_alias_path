@@ -125,63 +125,49 @@ function _add_to_cart_tapi($product){
 
     $display_id = (isset($product->display_id) && is_numeric($product->display_id)) ? $product->display_id : get_referencing_product_display_id($product);
     $display = (isset($display_id) && is_numeric($display_id)) ? node_load($display_id) : null;
-    $add_to_cart_form = field_view_field(
-        'node',
-        $display,
-        'field_product',
-        array(
-            'type' => 'commerce_cart_add_to_cart_form',
-            'label' => 'hidden',
-            'settings' => array(
-                'show_quantity' => FALSE,
-                'default_quantity' => 1,
-                'combine' => TRUE,
-                'show_single_product_attributes' => FALSE,
-                'line_item_type' => 'product',
-            ),
-        )
-    );
 
-//    $add_to_cart = (isset($display)) ? render($add_to_cart_form) : null;
-    $form = $add_to_cart_form[0];
-
+    if(isset($display)){
+        $add_to_cart_form = field_view_field(
+            'node',
+            $display,
+            'field_product',
+            array(
+                'type' => 'commerce_cart_add_to_cart_form',
+                'label' => 'hidden',
+                'settings' => array(
+                    'show_quantity' => FALSE,
+                    'default_quantity' => 1,
+                    'combine' => TRUE,
+                    'show_single_product_attributes' => FALSE,
+                    'line_item_type' => 'product',
+                ),
+            )
+        );
+    }else{
+        //display is not set for the product
+        $add_to_cart_form = '';
+        watchdog(WATCHDOG_NOTICE, 'Product display is missing for product with sku:'.$product->sku.' (see _add_to_cart_tapi())');
+    }
 
     $product_tapi = array();
-//    $form_name = 'commerce_cart_add_to_cart_form';
-//    $form_id_input = $form_name.'_'.$product->product_id;
-//    $data = array(
-//        'context'=>array(
-//            'display_path' => base_path().$_GET['q'],
-//            'product_ids' => array($product->product_id),
-//        )
-//    );
-//    $line_item = commerce_product_line_item_new($product,1,0,$data);
-//    $form = drupal_get_form($form_name, $line_item);
-    $product_tapi['action'] = $form['#action'];
-//    $form['form_id']['#value'] = $form_id_input;
-    $product_tapi['form_id_rendered'] = render($form['form_id']);
-    $product_tapi['form_id'] = $form['#id'];
-    $product_tapi['product_id'] = $product->product_id;
-    $product_tapi['form_build_id'] = render($form['form_build_id']);
+
+    if(isset($add_to_cart_form[0])){
+        $form = $add_to_cart_form[0];
+        $product_tapi['action'] = $form['#action'];
+        $product_tapi['form_id_rendered'] = render($form['form_id']);
+        $product_tapi['form_id'] = $form['#id'];
+        $product_tapi['product_id'] = $product->product_id;
+        $product_tapi['form_build_id'] = render($form['form_build_id']);
+    }else{
+        $product_tapi['action'] = "/";
+        $product_tapi['form_id_rendered'] = "";
+        $product_tapi['form_id'] = "";
+        $product_tapi['product_id'] = "";
+        $product_tapi['form_build_id'] = "";
+    }
+
+
     $product_tapi['link_text'] = t('Add To Cart');
-//    $product_tapi = array();
-//    $form_name = 'commerce_cart_add_to_cart_form';
-//    $form_id_input = $form_name.'_'.$product->product_id;
-//    $data = array(
-//        'context'=>array(
-//            'display_path' => base_path().$_GET['q'],
-//            'product_ids' => array($product->product_id),
-//        )
-//    );
-//    $line_item = commerce_product_line_item_new($product,1,0,$data);
-//    $form = drupal_get_form($form_name, $line_item);
-//    $product_tapi['action'] = $form['#action'];
-//    $form['form_id']['#value'] = $form_id_input;
-//    $product_tapi['form_id_rendered'] = render($form['form_id']);
-//    $product_tapi['form_id'] = str_replace('_','-',$form_id_input);
-//    $product_tapi['product_id'] = $product->product_id;
-//    $product_tapi['form_build_id'] = render($form['form_build_id']);
-//    $product_tapi['link_text'] = t('Add To Cart');
 
     return $product_tapi;
 }
