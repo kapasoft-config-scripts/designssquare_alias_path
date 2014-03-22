@@ -149,3 +149,14 @@ function is_product_taxonomy(){
         return false;
     }
 }
+
+function get_template_path($module_name, $template_name){
+    $path_to_theme_templates = path_to_theme().'/templates';
+    $path_to_widget_templates = drupal_get_path('module', $module_name).'/templates';
+
+    if(file_exists($path_to_theme_templates.'/'.$template_name.'.tpl.php')){
+        return $path_to_theme_templates;
+    }else{
+        return $path_to_widget_templates;
+    }
+}
