@@ -1,7 +1,0 @@
-<?php
-/**
- * @file
- * Code for the designssquare_com_theme_bazar_structure feature.
- */
-
-include_once 'designssquare_com_theme_bazar_structure.features.inc';

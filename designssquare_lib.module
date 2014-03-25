@@ -69,7 +69,7 @@ function include_blocks(&$vars){
         }
 
         if(isset($ctx_blocks) && isset($blocks)) {
-            //there are blocks from the context as well from blocks module
+            //there are blocks from the context and from blocks module
             $all_blocks = array_merge($blocks, $ctx_blocks);
 
             //sort the blocks merged
@@ -83,8 +83,10 @@ function include_blocks(&$vars){
             }
 
         }elseif(isset($ctx_blocks)){
+            //there are blocks ONLY from context module
             $all_blocks = $ctx_blocks;
         }elseif(isset($blocks)){
+            //there are blocks ONLY from block module
             $all_blocks = $blocks;
         }
 
@@ -159,4 +161,52 @@ function get_template_path($module_name, $template_name){
     }else{
         return $path_to_widget_templates;
     }
+}
+
+//moves blocks from one sidebar to another depending on the taxonomy specified to left, right or none
+function move_blocks_for_sidebars(&$context, $term_id_of_sidebar){
+    $post_sidebar = taxonomy_term_load($term_id_of_sidebar);
+
+    if((isset($post_sidebar->name)) && ($post_sidebar->name == 'right' || $post_sidebar->name == 'left')){
+        $sidebar_pos = _get_sidebar_pos($post_sidebar->name);
+        foreach($context->reactions['block']['blocks'] as $key => $block){
+            if($block['region'] == $sidebar_pos['from']){
+                //move sidebar to another side
+                $context->reactions['block']['blocks'][$key]['region'] = $sidebar_pos['to'];
+            }
+        }
+    }elseif((isset($post_sidebar->name)) && $post_sidebar->name == 'none'){
+        foreach($context->reactions['block']['blocks'] as $key => $block){
+            if($block['region'] == 'sidebar_first' || $block['region'] == 'sidebar_second'){
+                //remove any sidebar content
+                unset($context->reactions['block']['blocks'][$key]);
+            }
+        }
+    }
+}
+
+//retrieve currently loaded node from content cache
+//@return stdClass of the Node or Null if no node set in the content cache
+function get_node_from_cache(){
+    //get the current content from cache
+    $content = drupal_set_page_content();
+    //indicate that you are not adding content but just reading it by setting static variable 'system...added' to False
+    $system_main_content_added = &drupal_static('system_main_content_added');
+    $system_main_content_added = FALSE;
+
+    //retrieve current node being loaded
+//    $current_node = array_slice($content['system_main']['nodes'],0,1);
+    $current_node = null;
+    if($content){
+        //cache is set
+        $node_wrap = (isset($content['nodes'])) ? array_slice($content['nodes'],0,1) : null;
+        $current_node = (isset($node_wrap) && !empty($node_wrap)) ? array_values($node_wrap)[0]['#node'] : null;
+    }else{
+        //cache not set, lets try to load from path
+        if((arg(0) == 'node') && arg(1) && is_numeric(arg(1))){
+            $current_node = node_load(arg(1));
+        }
+    }
+
+    return $current_node;
 }
