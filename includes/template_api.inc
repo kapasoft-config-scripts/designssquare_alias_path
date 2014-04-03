@@ -221,7 +221,11 @@ function _product_complete_tapi($product, $display_node_id = Null){
 
 //prepare user related variables for the html.tpl file
 function _header_tapi_user(){
+    global $conf;
     global $user;
+    $name = (!empty($conf['anonymous'])) ? $conf['anonymous']  : 'Hello Mate';
+    $profile_img_url = base_path().path_to_theme().'/images/author.png';
+
     if($user->uid){
         //authenticated user
         $url = 'user/logout';
@@ -238,6 +242,8 @@ function _header_tapi_user(){
     }
 
     return array(
+        'name' => $name,
+        'avatar' => $profile_img_url,
         'login' => array(
             'url' => $url,
             'text' => $content,
@@ -273,7 +279,33 @@ function _simple_tapi($vars){
         'title' => !empty($vars['title']) ? $vars['title'] : '',
         'body' => !empty($vars['body']) ? $vars['body']: '',
         'slogan' => !empty($vars['slogan']) ? $vars['slogan'] : '',
+        'intro' => !empty($vars['intro']) ? $vars['intro'] : '',
     );
+}
+
+function _page_tapi($vars){
+    $page_tapi = array();
+    if(isset($vars['node']) && !empty($vars['node'])){
+        $node = $vars['node'];
+        $title_instance = field_get_items('node', $node, 'field_page_title');
+        $page_title_val = (!empty($title_instance[0])) ? field_view_value('node', $node, 'field_page_title', $title_instance[0]) : '';
+        $custom_title = htmlspecialchars_decode(render($page_title_val));
+        $page_tapi['title']= (!empty($custom_title)) ? $custom_title : $node->title;
+
+        $info_instance = field_get_items('node', $node, 'field_page_information');
+        $info_instance_val = (!empty($info_instance[0])) ? field_view_value('node', $node, 'field_page_information', $info_instance[0]) : '';
+        $page_tapi['intro'] = htmlspecialchars_decode(render($info_instance_val));
+
+        //*****backward compatable and should be using intro field instead the slogan
+        $field = field_get_items('node', $node, 'field_page_slogan');
+        $page_tapi['slogan'] = (!empty($field[0])) ? field_view_value('node', $node, 'field_page_slogan', $field[0]) : '';
+
+    }else{
+        $page_tapi = _simple_tapi($vars);
+    }
+
+    return $page_tapi;
+
 }
 
 
@@ -290,17 +322,54 @@ function _checkout_tapi($node){
 
 //prepare site related variables for the html.tpl file
 function _header_tapi_site(){
-    $logo_path = theme_get_setting('logo');
-    $path_to_home = base_path().variable_get('site_frontpage', 'node');
-    $site_name = (theme_get_setting('toggle_name') ? variable_get('site_name', 'Designs <span class="title-highlight">Square</span>') : 'Designs <span class="title-highlight">Square</span>');
-    $slogan = (variable_get('site_slogan')) ? variable_get('site_slogan') : 'slogan is not set';
+    $head_tapi = array();
+    /****Logo*****/
+    $logo_path = variable_get('logo',theme_get_setting('logo'));
+    $is_logo_enabled = variable_get('toggle_logo',theme_get_setting('toggle_logo'));
+    $head_tapi['logo'] = array();
+    $head_tapi['logo']['path'] = (!empty($logo_path)) ? $logo_path : '#';
+    $head_tapi['logo']['is_enabled'] = (!empty($is_logo_enabled)) ? TRUE : FALSE;
 
-    return array(
-        'slogan' => $slogan,
-        'site_name' => $site_name,
-        'home_url' => $path_to_home,
-        'logo_path' => $logo_path,
-    );
+    /****Site****/
+    $site_frontpage = variable_get('site_frontpage', 'node');
+    $site_name = variable_get('site_name', theme_get_setting('site_name'));
+    $is_name_enabled = variable_get('toggle_name' ,theme_get_setting('toggle_name'));
+
+    $head_tapi['site'] = array();
+    $head_tapi['site']['name'] = (!empty($site_name)) ? $site_name : 'Cas<strong>ca</strong>de <i class="fa fa-bookmark"></i>';
+    $head_tapi['site']['name_enabled'] = ($is_name_enabled) ? TRUE : FALSE;
+    $head_tapi['site']['front_url'] = (!empty($site_frontpage)) ? base_path().$site_frontpage : '#';
+
+    /*****Slogan*****/
+    $site_slogan = variable_get('slogan', theme_get_setting('slogan'));
+    $is_slogan_enabled = variable_get('toggle_slogan', theme_get_setting('toggle_slogan'));
+    $head_tapi['slogan'] = array();
+    $head_tapi['slogan']['text'] = (!empty($site_slogan)) ? $site_slogan : '';
+    $head_tapi['slogan']['is_enabled'] = (!empty($is_slogan_enabled)) ? $is_slogan_enabled : FALSE;
+
+    /*****User*****/
+    $head_tapi['user'] = array();
+    $head_tapi['user'] = _header_tapi_user();
+
+    /*****Theme*****/
+    $head_tapi['settings'] = array();
+    $head_tapi['settings']['url'] = base_path().'admin/appearance/settings/cascade';
+    $head_tapi['settings']['text'] = t(' Settings');
+
+//    return array(
+//        'slogan' => $slogan,
+//        'site_name' => $site_name,
+//        'home_url' => $path_to_home,
+//        'logo_path' => $logo_path,
+//    );
+
+    /*********making backwards compatable**************/
+    $head_tapi['slogan'] = $site_slogan;
+    $head_tapi['site_name'] = $head_tapi['site']['name'];
+    $head_tapi['home_url'] = $head_tapi['site']['front_url'];
+    $head_tapi['logo_path'] = $head_tapi['logo']['path'];
+
+    return $head_tapi;
 }
 
 function _search_tapi(){

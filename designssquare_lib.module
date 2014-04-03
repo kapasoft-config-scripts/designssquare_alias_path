@@ -210,3 +210,34 @@ function get_node_from_cache(){
 
     return $current_node;
 }
+
+//adding templates to the themes scope. It is assumed that all template files are stored in folder named "templates"
+function add_templates($module, &$theme_registry){
+    //make local templates available
+    $path  = drupal_get_path('module', $module).'/templates';
+    $registry_entries = drupal_find_theme_templates($theme_registry, '.tpl.php', $path);
+    //to avoid error message adding 'type'
+    foreach($registry_entries as $key => $entry){
+        $registry_entries[$key]['type'] = 'module';
+        $registry_entries[$key]['theme path'] = $path;
+    }
+    $theme_registry += $registry_entries;
+}
+
+//retrieves path to an artifact relative to its module, so it can be copied in current Drupal instance
+function get_relative_artifact($uri, $file_name, $module){
+    $source = drupal_get_path('module',$module).'/imports/public/'.substr($uri, 9);
+
+    //handle file name versioning (_0_0...)
+    $name_without_ext = substr($file_name, 0, strrpos($file_name, '.'));
+    if($file_name_end = strrpos($source, $name_without_ext)){
+        //aftifact file name is versioned. lets get the root path
+        $source = substr($source, 0, $file_name_end).$file_name;
+    }
+
+    if(!file_exists($source)){
+        watchdog(WATCHDOG_NOTICE, 'Import '.$module.': Image does not exists at '.$source);
+    }
+    return $source;
+}
+
