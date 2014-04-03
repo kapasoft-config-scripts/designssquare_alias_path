@@ -235,6 +235,9 @@ function get_relative_artifact($uri, $file_name, $module){
         $source = substr($source, 0, $file_name_end).$file_name;
     }
 
+    //clean double backslashes
+    str_replace('/','//',$source);
+
     if(!file_exists($source)){
         watchdog(WATCHDOG_NOTICE, 'Import '.$module.': Image does not exists at '.$source);
     }
