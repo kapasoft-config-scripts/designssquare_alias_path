@@ -244,3 +244,14 @@ function get_relative_artifact($uri, $file_name, $module){
     return $source;
 }
 
+//strips away versoning for uri
+function remove_uri_version($uri, $filename){
+    $name_without_ext = substr($filename, 0, strrpos($filename, '.'));
+    if($file_name_end = strrpos($uri, $name_without_ext)){
+        return substr($uri, 0, $file_name_end).$filename;
+    }else{
+        watchdog(WATCHDOG_NOTICE, 'File name '.$filename.' is not part of uri...see remove_uri_version()' );
+        return $uri;
+    }
+}
+
