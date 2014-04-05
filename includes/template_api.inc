@@ -341,13 +341,11 @@ function _header_tapi_site(){
     $head_tapi['site']['front_url'] = (!empty($site_frontpage)) ? base_path().$site_frontpage : '#';
 
     /*****Slogan*****/
-    $site_slogan = variable_get('slogan', theme_get_setting('slogan'));
+    $site_slogan = variable_get('site_slogan', theme_get_setting('slogan'));
     $is_slogan_enabled = variable_get('toggle_slogan', theme_get_setting('toggle_slogan'));
-    $head_tapi['slogan'] = array();
-    $head_tapi['slogan']['text'] = (!empty($site_slogan)) ? $site_slogan : '';
-    $head_tapi['slogan']['is_enabled'] = (!empty($is_slogan_enabled)) ? $is_slogan_enabled : FALSE;
-
-    /*****User*****/
+    $head_tapi['site_slogan'] = array();
+    $head_tapi['site_slogan']['text'] = (!empty($site_slogan)) ? $site_slogan : '';
+    $head_tapi['site_slogan']['is_enabled'] = (!empty($is_slogan_enabled)) ? $is_slogan_enabled : FALSE;
     $head_tapi['user'] = array();
     $head_tapi['user'] = _header_tapi_user();
 
