@@ -1,0 +1,7 @@
+name = DesignsSquare.com Library: Alias Path
+description = exports/imports alias path for nodes via features
+core = 7.x
+version = 7.x-0.1-dev
+project = designssquare_alias_path
+package = DesignsSquare.com.utilities
+
