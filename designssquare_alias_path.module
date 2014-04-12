@@ -10,9 +10,11 @@ function designssquare_alias_path_uuid_node_features_export_render_alter(&$expor
 
 //save temporary alias path in variable mapped to node via node's uuid
 function designssquare_alias_path_uuid_node_features_rebuild_alter(&$node, $module){
-        $alias_url = $node->alias_url;
-        variable_set('node_path_alias_'.$node->uuid, $alias_url);
-        unset($node->alias_url);
+        if(isset($node->alias_url)){
+            $alias_url = $node->alias_url;
+            variable_set('node_path_alias_'.$node->uuid, $alias_url);
+            unset($node->alias_url);
+        }
 }
 
 //inserts alias path for each node
@@ -24,7 +26,7 @@ function designssquare_alias_path_pathauto_alias_alter(&$alias, array &$context)
     if($pos == 0){
         $id = substr($context['source'], 5);
         $node = node_load($id);
-        $alias_url = variable_get('node_path_alias_'.$node->uuid, FALSE);
+        $alias_url = (isset($node->uuid)) ? variable_get('node_path_alias_'.$node->uuid, FALSE) : FALSE;
     }else{
         $alias_url = FALSE;
     }
