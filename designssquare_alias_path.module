@@ -2,10 +2,10 @@
 
 //exports alias path
 function designssquare_alias_path_uuid_node_features_export_render_alter(&$export, $node, $module){
-    if($module == 'designssquare_com_theme_builder_sample_data'){
-        $alias_url = drupal_get_path_alias('node/'.$node->nid);
-        $export->alias_url = $alias_url;
-    }
+        if(isset($node->nid)){
+            $alias_url = drupal_get_path_alias('node/'.$node->nid);
+            $export->alias_url = $alias_url;
+        }
 }
 
 //save temporary alias path in variable mapped to node via node's uuid
